@@ -1,0 +1,80 @@
+<?php
+
+/**
+ * @file
+ * Functions to support theming in the SASS Starterkit subtheme.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Implements hook_form_system_theme_settings_alter() for settings form.
+ *
+ * Replace Barrio setting options with subtheme ones.
+ */
+function woobienes_form_system_theme_settings_alter(&$form, FormStateInterface $form_state)
+{
+  $form['components']['navbar']['bootstrap_barrio_navbar_top_background']['#options'] = [
+    'bg-primary' => t('Primary'),
+    'bg-secondary' => t('Secondary'),
+    'bg-light' => t('Light'),
+    'bg-dark' => t('Dark'),
+    'bg-white' => t('White'),
+    'bg-transparent' => t('Transparent'),
+  ];
+  $form['components']['navbar']['bootstrap_barrio_navbar_background']['#options'] = [
+    'bg-primary' => t('Primary'),
+    'bg-secondary' => t('Secondary'),
+    'bg-light' => t('Light'),
+    'bg-dark' => t('Dark'),
+    'bg-white' => t('White'),
+    'bg-transparent' => t('Transparent'),
+  ];
+}
+
+/**
+ * Implements HOOK_preprocess_breadcrumb().
+ */
+function woobienes_preprocess_breadcrumb(&$variables)
+{
+  if (($node = \Drupal::routeMatch()
+      ->getParameter('node')) && $variables['breadcrumb'])
+  {
+    $breadcrumb = &$variables['breadcrumb'];
+    if (!empty($node->field_category->entity))
+    {
+      $term_url = $node->field_category->entity->toLink();
+      $node_url = array_pop($breadcrumb);
+      array_push($breadcrumb, $node_url);
+      array_push($breadcrumb, $term_url);
+      // Implementing Cache.
+      $variables['#cache']['contexts'][] = "url.path";
+      $variables['#cache']['tags'][] = "node:{$node->nid->value}";
+    }
+  }
+}
+
+function woobienes_preprocess_entity_embed_container(&$variables)
+{
+
+  //  $el = $variables['element'];
+  $fd = $variables['element']['#entity']->getFields();
+  //  $fd = $en->getFields();
+  //  $ty = $fd['type'];
+  $type = $fd['type']->getValue()['0']['target_id'];
+
+  if ($type == 'adv')
+  {
+    $variables['attributes']['class'][] = 'adv';
+  }
+}
+
+function woobienes_preprocess_field(&$variables, $hook)
+{
+  $fd = $variables['element']['#object']->getFields();
+  if (isset ($fd['field_adv_id']))
+  {
+    $adviid = isset ($fd['field_adv_id']->getValue()['0']['value']) ? $fd['field_adv_id']->getValue()['0']['value'] : '';
+    $variables['adviid'] = $adviid;
+  }
+}
